@@ -1,0 +1,864 @@
+openapi: 3.0.1
+info:
+  title: Task Manager API
+  description: Effective mobile
+  contact:
+    name: Levshin Nikita
+    url: https://github.com/NikitaLevshin
+    email: levshinno@yandex.ru
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Generated server url
+tags:
+  - name: Регистрация и авторизация
+    description: Регистрация, авторизация и аутентификация по токену
+  - name: Задачи
+    description: Взаимодействие с задачами
+  - name: Комментарии
+    description: Добавление и удаление комментариев
+  - name: Пользователи
+    description: Взаимодействие с пользователями
+paths:
+  /task:
+    get:
+      tags:
+        - Задачи
+      summary: Получение всех заданий с возможностью фильтрации
+      operationId: getAllTasks
+      parameters:
+        - name: title
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - IN_PROCESS
+              - COMPLETED
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - LOW
+              - MEDIUM
+              - HIGH
+        - name: creator
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: performer
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+    post:
+      tags:
+        - Задачи
+      summary: Создание нового задания
+      operationId: createTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTaskDto'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /task/{taskId}/comment:
+    post:
+      tags:
+        - Комментарии
+      summary: Добавление нового комментария к заданию
+      operationId: createComment
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCommentDto'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/CommentDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /auth/token:
+    post:
+      tags:
+        - Регистрация и авторизация
+      summary: Получение нового access токена
+      operationId: getNewAccessToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/register:
+    post:
+      tags:
+        - Регистрация и авторизация
+      summary: Регистрация пользователя
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserDto'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/refresh:
+    post:
+      tags:
+        - Регистрация и авторизация
+      summary: Получение новой пары access/refresh токенов
+      operationId: refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /auth/login:
+    post:
+      tags:
+        - Регистрация и авторизация
+      summary: Авторизация пользователя
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JwtRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /user:
+    get:
+      tags:
+        - Пользователи
+      summary: Получение списка всех пользователей
+      operationId: getAllUsers
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+    patch:
+      tags:
+        - Пользователи
+      summary: Редактирование данных пользователя
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditUserDto'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /task/{id}:
+    get:
+      tags:
+        - Задачи
+      summary: Получение конкретного задания по id
+      operationId: getTaskById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+    delete:
+      tags:
+        - Задачи
+      summary: Удаление задания
+      operationId: deleteTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+    patch:
+      tags:
+        - Задачи
+      summary: Редактирование существующего задания
+      operationId: editTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTaskDto'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /task/status/{id}:
+    patch:
+      tags:
+        - Задачи
+      summary: Обновление статуса задания
+      operationId: updateTaskStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              enum:
+                - PENDING
+                - IN_PROCESS
+                - COMPLETED
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/TaskDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /user/{id}:
+    get:
+      tags:
+        - Пользователи
+      summary: Получение пользователя по id
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+  /comment/{id}:
+    delete:
+      tags:
+        - Комментарии
+      summary: Удаление комментария
+      operationId: deleteCommentById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad Request
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: Forbidden
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      security:
+        - JWT: []
+components:
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        message:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+        timeStamp:
+          type: string
+          format: date-time
+    NewTaskDto:
+      required:
+        - title
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          maxLength: 500
+          minLength: 10
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROCESS
+            - COMPLETED
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+        performerId:
+          type: integer
+          format: int64
+      description: Объект задачи при создании новой
+    CommentDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        comment:
+          type: string
+        taskId:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/UserDto'
+      description: Объект комментария, возвращаемый при запросах
+    TaskDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROCESS
+            - COMPLETED
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+        creator:
+          $ref: '#/components/schemas/UserDto'
+        performer:
+          $ref: '#/components/schemas/UserDto'
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentDto'
+      description: Объект задачи возвращающися при запросах
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+      description: Объект пользователя возвращаемого в ответе
+    NewCommentDto:
+      required:
+        - comment
+      type: object
+      properties:
+        comment:
+          maxLength: 1000
+          minLength: 5
+          type: string
+      description: Объект комментария при его создании
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      description: Refresh токен, отправяемый при запросе на новый access или новую пару access/refresh
+    JwtResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+      description: Объект, возвращающий access и refresh токены при успешной авторизации
+    NewUserDto:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          maxLength: 50
+          minLength: 6
+          type: string
+        password:
+          maxLength: 50
+          minLength: 6
+          type: string
+        firstName:
+          maxLength: 15
+          minLength: 2
+          type: string
+        lastName:
+          maxLength: 30
+          minLength: 2
+          type: string
+      description: Объект пользователя при регистрации
+    JwtRequest:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          maxLength: 50
+          minLength: 6
+          type: string
+        password:
+          maxLength: 50
+          minLength: 6
+          type: string
+      description: Объект пользователя, отправляемый прри авторизации
+    EditUserDto:
+      required:
+        - email
+      type: object
+      properties:
+        email:
+          maxLength: 50
+          minLength: 6
+          type: string
+        firstName:
+          maxLength: 15
+          minLength: 2
+          type: string
+        lastName:
+          maxLength: 30
+          minLength: 2
+          type: string
+      description: Объект пользователя при обновлении данных
+    EditTaskDto:
+      required:
+        - title
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          maxLength: 500
+          minLength: 10
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - IN_PROCESS
+            - COMPLETED
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+        performerId:
+          type: integer
+          format: int64
+      description: Объект задачи при её обновлении
+  securitySchemes:
+    JWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
